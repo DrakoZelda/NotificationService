@@ -1,0 +1,20 @@
+{
+  "name": "notification_service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "chai": "^4.1.2",
+    "express": "^4.16.3",
+    "nodemailer": "^4.6.7",
+    "picklejs": "0.0.0",
+    "request": "^2.87.0",
+    "request-promise": "^4.2.2"
+  }
+}
