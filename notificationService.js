@@ -119,14 +119,15 @@ class NotificationService {
   notify(_artistId,_subject,_message,_from){
     let artist = this.subjects.find(s => s.artistId == _artistId);
     if(artist === undefined) {
-        throw new Error('No existe el artista con id: '+_artistId);
+      //No hace nada porque si llego hasta aca significa que el artista existe en UNQfy (chequeado en main_controller)
+      // pero el hecho de que no exista en notificationService es por el hecho de que nunca se subscribio alguien
+    } else {
+      try {
+        artist.notifyAll(_subject,_message,_from);
+      } catch (e) {
+        throw e;
+      }
     }
-    try {
-      artist.notifyAll(_subject,_message,_from);
-    } catch (e) {
-      throw e;
-    }
-
   }
 
   save(filename) {
