@@ -22,21 +22,36 @@ class NotificationService {
   }
 
   existSubjectOf(_artistId){
+    /*
     let sub = this.subjects.filter(s => s.artistId == _artistId);
     return (sub.length !== 0);
+    */
+    let sub = this.subjects.find(s => s.artistId == _artistId);
+    return (sub !== undefined);
   }
 
   addSubscriberTo(_artistId, _email){
+    console.log('addSubscriberTo')
     let sub;
-    if(existSubjectOf(_artistId)){
+    if(this.existSubjectOf(_artistId)){
+      console.log('if existSubjectOf TRUE')
       sub = this.subjects.find(s => s.artistId == _artistId);
-      sub.suscribe(new Observer(_email));
-      this.subjects = this.subjects.filter(s => s.artistId !== _artistId).push(sub);
+      sub.subscribe(new Observer(_email));
+      //this.subjects = this.subjects.filter(s => s.artistId !== _artistId).push(sub);
+      let newSubjects = this.subjects.filter(s => s.artistId !== _artistId);
+      newSubjects.push(sub);
+      this.subjects = newSubjects;
 
     } else{
+      console.log('if existSubjectOf FALSE')
       sub = new Subject(_artistId);
-      sub.suscribe(new Observer(_email));
+      console.log('new subject')
+      console.log(sub)
+      sub.subscribe(new Observer(_email));
+      console.log('add observer')
+      console.log(sub)
       this.subjects.push(sub);
+      console.log(this.subjects)
     }
   }
 
@@ -46,24 +61,87 @@ class NotificationService {
     this.subjects = this.subjects.filter(s => s.artistId !== _artistId).push(sub);
   }
 
+  deleteSubscriberIfExistOf(_artistId, _email){
+    try {
+      console.log(_artistId)
+      let artist = this.subjects.find(s => s.artistId == _artistId);
+      console.log(artist)
+      /*if(artist === undefined) {
+          throw new Error('No existe el artista con id: '+_artistId);
+      }*/
+      artist.deleteSubscriberIfExist(_email);
+    } catch (e) {}
+
+  }
+
   notifyAll(_params){
     this.subjects.forEach(s => s.notify(_params));
   }
 
   getEmailsOf(_artistId){
-    let emails = this.subjects.find(s => s.artistId == _artistId).observers;
+    let artist = this.subjects.find(s => s.artistId == _artistId)
+    if(artist === undefined) {
+        throw new Error('No existe el artista con id: '+_artistId);
+    }
+    let emails = artist.getObservers();
     return emails;
   }
 
-  deleteEmailsOf(_artistId){
+  deleteAllEmailsOf(_artistId){
     let sub = this.subjects.find(s => s.artistId == _artistId);
-    sub.deleteEmails();
-    this.subjects = this.subjects.filter(s => s.artistId !== _artistId).push(sub);
+    if(sub !== undefined){
+      sub.deleteEmails();
+      let subjectsUpdated = this.subjects.filter(s => s.artistId !== _artistId);
+      subjectsUpdated.push(sub);
+      this.subjects = subjectsUpdated;
+    }
+
   }
 
+  deleteArtistFeed(_artistId) {
+    console.log('deleteArtistFeed')
+  //  if(this.existSubjectOf(_artistId)){
+      console.log('if true')
+      console.log('_artistId = '+_artistId)
+      let subjectsUpdated = this.subjects.filter(s => s.artistId != _artistId);
+      this.subjects = subjectsUpdated;
+      console.log('subjectsUpdated')
+      console.log(subjectsUpdated)
+      console.log('this.subjects')
+      console.log(this.subjects)
+    /*} else {
+      console.log('if false')
+      throw new Error('No existe el artista con id: '+_artistId);
+    }
+    */
+  }
 
+  notify(_artistId,_subject,_message,_from){
+    let artist = this.subjects.find(s => s.artistId == _artistId);
+    if(artist === undefined) {
+        throw new Error('No existe el artista con id: '+_artistId);
+    }
+    try {
+      artist.notifyAll(_subject,_message,_from);
+    } catch (e) {
+      throw e;
+    }
 
-  //save(filename = 'notificationService.json') {
+  }
+
+  save(filename) {
+    new picklejs.FileSerializer().serialize(filename, this);
+  }
+
+  static load(filename = 'notificationService.json') {
+    const fs = new picklejs.FileSerializer();
+    // TODO: Agregar a la lista todas las clases que necesitan ser instanciadas
+    const classes = [NotificationService,Subject,Observer];
+    fs.registerClasses(...classes);
+    return fs.load(filename);
+  }
+
+/*
   save(filename) {
     new picklejs.FileSerializer().serialize(filename, this);
   }
@@ -75,10 +153,11 @@ class NotificationService {
     fs.registerClasses(...classes);
     return fs.load(filename);
   }
+  */
 
 
 }
 
 module.exports = {
-  NotificationService,
+  NotificationService
 };

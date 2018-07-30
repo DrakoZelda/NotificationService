@@ -24,9 +24,16 @@ class BadRequestError extends APIError {
   }
 }
 
+class InternalServerError extends APIError {
+  constructor(message = null) {
+    super(500, 'INTERNAL_SERVER_ERROR', message);
+  }
+}
+
 module.exports = {
   APIError,
   NotFoundError,
   RelatedResourceNotFoundError,
   BadRequestError,
+  InternalServerError
 };
