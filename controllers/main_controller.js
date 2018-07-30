@@ -141,11 +141,14 @@ function notify(req,res) {
         //throw new errors.RelatedResourceNotFoundError;//TO DO: MANEJO DE ERRORES
       } else {
         let notificationService = getNotificationService("BaseDeDatos");
-        res.status(200).send();
+
 
         try {
           notificationService.notify(artistId,subject,message,from);
+          res.status(200).send();
         } catch (e) {
+          console.log('ERROR ORIGINAL')
+          console.log(e)
           let errorHandleado = new errors.InternalServerError
           res.status(errorHandleado.status).send(errorHandleado)
           //throw e;
