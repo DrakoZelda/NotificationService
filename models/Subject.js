@@ -15,7 +15,12 @@ class Subject {
   }
 
   notifyAll (_subject,_message,_from) {
-    this.observers.forEach(o => o.notify(_subject,_message,_from));
+    try {
+      this.observers.forEach(o => o.notify(_subject,_message,_from));
+    } catch (e) {
+      throw e;
+    }
+
   }
 
   existObserver (_observer){

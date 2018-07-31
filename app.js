@@ -49,6 +49,9 @@ app.use(bodyParser.urlencoded({ extended: false}));
 app.use(bodyParser.json());
 app.use(invalidJsonHandler);
 app.use('/api', api);
-app.use(errorHandler);
+app.use(function(req, res){
+    res.status(404).send({status:404,errorCode:"RESOURCE_NOT_FOUND"});
+});
+//app.use(errorHandler);
 
 module.exports = app;

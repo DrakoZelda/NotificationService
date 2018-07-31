@@ -44,17 +44,19 @@ function isNumeric(n) {
 
 function subscribe(req, res, next){
   console.log('subscribe')
-  if(req.body.artistId == undefined || req.body.email == undefined){
+  if(req.body.artistId == undefined || req.body.email == undefined || req.body.email == '' || !isNumeric(req.body.artistId)){
     throw new errors.BadRequestError;
   }
-
+/*
   let options = {
       url: 'http://localhost:8000/api/existArtist/'+req.body.artistId,
        json: true,
      };
   console.log('http://localhost:8000/api/existArtist/'+req.body.artistId)
-  rp.get(options).then((response) => {
-      if(!response.exist){
+  rp.get(options)
+  */
+  existArtistInUnqfy(req.body.artistId).then((existeArtista) => {
+      if(!existeArtista){
         throw new errors.RelatedResourceNotFoundError;
       }
     //if(!existArtistInUnqfy(req.body.artistId)){
@@ -154,7 +156,12 @@ function notify(req,res) {
           //throw e;
         }//.catch();//TO DO: MANEJO DE ERRORES
       }
-    })
+    }).catch(err => {
+      //NO PUDO HABLAR CONTRA UNQFY
+      console.log('no pudo hablar con unqfy')
+      let errorHandleado = new errors.InternalServerError
+      res.status(errorHandleado.status).send(errorHandleado)
+    });
 
   }
 
@@ -178,32 +185,43 @@ function notifyAll(req, res){
 function getEmailsOf(req, res){
   console.log('getEmailsOf')
   console.log('artistId: '+req.params.artistId);
-  if(req.params.artistId == undefined){
-    throw new errors.BadRequestError;
+  if(req.params.artistId == undefined || !isNumeric(req.params.artistId)){
+    let errorHandleado = new errors.BadRequestError
+    res.status(errorHandleado.status).send(errorHandleado)
+    //throw new errors.BadRequestError;
+  } else {
+    existArtistInUnqfy(req.params.artistId).then((existeArtista) => {
+      if(!existeArtista){
+        let errorHandleado = new errors.RelatedResourceNotFoundError
+        res.status(errorHandleado.status).send(errorHandleado)
+        //throw new errors.RelatedResourceNotFoundError;
+      } else {
+        let notificationService = getNotificationService("BaseDeDatos");
+        let emails
+
+        try{
+         emails = notificationService.getEmailsOf(req.params.artistId);
+         res.status(200).send({artistId:req.params.artistId, subscriptors:emails});
+         console.log('getEmailsOf TERMINO')
+        } catch(err) {
+         let errorHandleado = new errors.RelatedResourceNotFoundError
+         res.status(errorHandleado.status).send(errorHandleado)
+         //console.log(new errors.RelatedResourceNotFoundError)
+         //throw new errors.RelatedResourceNotFoundError;
+       }
+
+
+
+      }
+    }).catch(err => {
+      //NO PUDO HABLAR CONTRA UNQFY
+      console.log('no pudo hablar con unqfy')
+      let errorHandleado = new errors.InternalServerError
+      res.status(errorHandleado.status).send(errorHandleado)
+    });
   }
 
-  existArtistInUnqfy(req.params.artistId).then((existeArtista) => {
-    if(!existeArtista){
-      throw new errors.RelatedResourceNotFoundError;
-    } else {
-      let notificationService = getNotificationService("BaseDeDatos");
-      let emails
 
-      try{
-       emails = notificationService.getEmailsOf(req.params.artistId);
-       res.status(200).send({artistId:req.params.artistId, subscriptors:emails});
-       console.log('getEmailsOf TERMINO')
-      } catch(err) {
-       let errorHandleado = new errors.RelatedResourceNotFoundError
-       res.status(errorHandleado.status).send(errorHandleado)
-       //console.log(new errors.RelatedResourceNotFoundError)
-       //throw new errors.RelatedResourceNotFoundError;
-     }
-
-
-
-    }
-  });//TO DO: AGREGAR CATCH
 
   /*
   console.log(existArtistInUnqfy(req.params.artistId));
@@ -242,25 +260,29 @@ function deleteFeed(req, res){
 
 function deleteAllEmailsOf(req, res){
   if(req.body.artistId == undefined || !isNumeric(req.body.artistId)){
-    throw new errors.BadRequestError;
-  }
-
-  existArtistInUnqfy(req.body.artistId).then((existeArtista) => {
-    if(!existeArtista){
+    let errorHandled = new errors.BadRequestError;
+    res.status(errorHandled.status).send(errorHandled);
+    //throw new errors.BadRequestError;
+  } else {
+    existArtistInUnqfy(req.body.artistId).then((existeArtista) => {
+      if(!existeArtista){
+        let errorHandled = new errors.RelatedResourceNotFoundError;
+        res.status(errorHandled.status).send(errorHandled);
+        //throw new errors.RelatedResourceNotFoundError;
+      } else {
+        let notificationService = getNotificationService("BaseDeDatos");
+        notificationService.deleteAllEmailsOf(req.body.artistId);
+        saveNotificationService(notificationService,"BaseDeDatos");
+        res.status(200).send();
+      }
+    }).catch((err) => {
       let errorHandled = new errors.RelatedResourceNotFoundError;
       res.status(errorHandled.status).send(errorHandled);
-      //throw new errors.RelatedResourceNotFoundError;
-    } else {
-      let notificationService = getNotificationService("BaseDeDatos");
-      notificationService.deleteAllEmailsOf(req.body.artistId);
-      saveNotificationService(notificationService,"BaseDeDatos");
-      res.status(200).send();
-    }
-  }).catch((err) => {
-    let errorHandled = new errors.RelatedResourceNotFoundError;
-    res.status(errorHandled.status).send(errorHandled);
-    //throw errorHandled //TO DO: MANEJO DE ERRORES
-  });
+      //throw errorHandled //TO DO: MANEJO DE ERRORES
+    });
+  }
+
+
 
 /*
   if(!existArtistInUnqfy(req.body.artistId)){

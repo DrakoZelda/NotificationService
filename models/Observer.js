@@ -77,6 +77,7 @@ class Observer {
 
     transporter.sendMail(mailOptions, function (err, info){
       if(err) {
+        console.log('ERROR ORIGINAL - observer.notify()')
         console.log(err);
         throw err;
       } else {
