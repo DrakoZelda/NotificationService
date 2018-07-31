@@ -1,7 +1,6 @@
 const fs = require('fs'); // necesitado para guardar/cargar unqfy
 const notmod = require('../notificationService');
 const errors = require('../errors');
-//const picklejs = require('picklejs');
 const rp = require('request-promise')
 const UNQFY_BASEURL = 'http://' + 'localhost'+ ':' + '8000' + '/api/';
 
@@ -28,8 +27,6 @@ function existArtistInUnqfy(_artistId){
      };
      console.log(options.url)
      return rp.get(options).then((response) => response.exist).catch((err) => {
-       //console.log('existArtistInUnqfy ORIGINAL ERROR:');
-       //console.log(err);
        if(err.statusCode == 404){
          throw new errors.RelatedResourceNotFoundError;
        } else {
@@ -48,17 +45,12 @@ function subscribe(req, res, next){
   if(req.body.artistId == undefined || req.body.email == undefined || req.body.email == '' || !isNumeric(req.body.artistId)){
     let errorHandleado = new errors.BadRequestError
     res.status(errorHandleado.status).send(errorHandleado)
-    //throw new errors.BadRequestError;
   } else {
     existArtistInUnqfy(req.body.artistId).then((existeArtista) => {
         if(!existeArtista){
           let errorHandleado = new errors.RelatedResourceNotFoundError
           res.status(errorHandleado.status).send(errorHandleado)
-          //throw new errors.RelatedResourceNotFoundError;
         }
-      //if(!existArtistInUnqfy(req.body.artistId)){
-        //throw new errors.RelatedResourceNotFoundError;
-      //}
 
       let notificationService = getNotificationService("BaseDeDatos");
       console.log(notificationService);
@@ -76,7 +68,6 @@ function subscribe(req, res, next){
 
       res.status(200).send();
     }).catch( (error) => {
-      //NO PUDO HABLAR CONTRA UNQFY
     console.log('no pudo hablar con unqfy')
     let errorHandleado = new errors.InternalServerError
     res.status(errorHandleado.status).send(errorHandleado)
@@ -100,26 +91,10 @@ function unsubscribe(req, res){
         saveNotificationService(notificationService,"BaseDeDatos");
         res.status(200).send();
       }
-    }).catch((err) => res.status(err.status).send(err));//TO DO: AGREGAR CATCH CORRECTO (QUIZAS?)
+    }).catch((err) => res.status(err.status).send(err));
   } catch (e) {
     res.status(e.status).send(e);
-    //throw e;
   }
-
-/*
-  if(!existArtistInUnqfy(req.body.artistId)){
-    throw new errors.RelatedResourceNotFoundError;
-  }
-
-  let notificationService = getNotificationService("BaseDeDatos");
-
-  if(notificationService.existSubscriberOf(req.body.artistId, req.body.email)){
-    notificationService.deleteSubscriberOf(req.body.artistId, req.body.email);
-    saveNotificationService(notificationService, "BaseDeDatos");
-  }
-
-  res.status(200).send();
-*/
 }
 
 function notify(req,res) {
@@ -136,14 +111,12 @@ function notify(req,res) {
   if(artistId == undefined || subject == undefined || message == undefined || from == undefined || !isNumeric(artistId)){
     let err = new errors.BadRequestError;
     res.status(err.status).send(err);
-    //throw new errors.BadRequestError; //TO DO: MANEJO DE ERRORES
   } else {
 
     existArtistInUnqfy(artistId).then((existeArtista) => {
       if(!existeArtista){
         let errorHandleado = new errors.RelatedResourceNotFoundError;
         res.status(errorHandleado.status).send(errorHandleado)
-        //throw new errors.RelatedResourceNotFoundError;//TO DO: MANEJO DE ERRORES
       } else {
         let notificationService = getNotificationService("BaseDeDatos");
 
@@ -156,11 +129,9 @@ function notify(req,res) {
           console.log(e)
           let errorHandleado = new errors.InternalServerError
           res.status(errorHandleado.status).send(errorHandleado)
-          //throw e;
-        }//.catch();//TO DO: MANEJO DE ERRORES
+        }
       }
     }).catch(err => {
-      //NO PUDO HABLAR CONTRA UNQFY
       console.log('no pudo hablar con unqfy')
       let errorHandleado = new errors.InternalServerError
       res.status(errorHandleado.status).send(errorHandleado)
@@ -170,34 +141,17 @@ function notify(req,res) {
 
 }
 
-/*
-function notifyAll(req, res){
-  if(req.body.artistId == undefined || req.body.subject == undefined || req.body.message == undefined || req.body.from == undefined){
-    throw new errors.BadRequestError;
-  }
-
-  if(!existArtistInUnqfy(req.body.artistId)){
-    throw new errors.RelatedResourceNotFoundError;
-  }
-
-  let notificationService = getNotificationService("BaseDeDatos");
-  notificationService.notifyAll({artistId:req.body.artistId, subject:req.body.subject,message:req.body.message,from:req.body.from});
-  res.status(200).send();
-}
-*/
 function getEmailsOf(req, res){
   console.log('getEmailsOf')
   console.log('artistId: '+req.params.artistId);
   if(req.params.artistId == undefined || !isNumeric(req.params.artistId)){
     let errorHandleado = new errors.BadRequestError
     res.status(errorHandleado.status).send(errorHandleado)
-    //throw new errors.BadRequestError;
   } else {
     existArtistInUnqfy(req.params.artistId).then((existeArtista) => {
       if(!existeArtista){
         let errorHandleado = new errors.RelatedResourceNotFoundError
         res.status(errorHandleado.status).send(errorHandleado)
-        //throw new errors.RelatedResourceNotFoundError;
       } else {
         let notificationService = getNotificationService("BaseDeDatos");
         let emails
@@ -209,35 +163,14 @@ function getEmailsOf(req, res){
         } catch(err) {
          let errorHandleado = new errors.RelatedResourceNotFoundError
          res.status(errorHandleado.status).send(errorHandleado)
-         //console.log(new errors.RelatedResourceNotFoundError)
-         //throw new errors.RelatedResourceNotFoundError;
        }
-
-
-
-      }
+     }
     }).catch(err => {
-      //NO PUDO HABLAR CONTRA UNQFY
       console.log('no pudo hablar con unqfy')
       let errorHandleado = new errors.InternalServerError
       res.status(errorHandleado.status).send(errorHandleado)
     });
   }
-
-
-
-  /*
-  console.log(existArtistInUnqfy(req.params.artistId));
-  if(!existArtistInUnqfy(req.params.artistId)){
-    throw new errors.RelatedResourceNotFoundError;
-  }
-
-  let notificationService = getNotificationService("BaseDeDatos");
-  let emails = notificationService.getEmailsOf(req.params.artistId);
-
-  res.status(200).send({artistId:req.params.artistId, subscriptors:emails});
-  console.log('getEmailsOf TERMINO')
-  */
 }
 
 function deleteFeed(req, res){
@@ -256,7 +189,6 @@ function deleteFeed(req, res){
     console.log(e)
     let errorHandled = new errors.RelatedResourceNotFoundError;
     res.status(errorHandled.status).send(errorHandled);
-    //throw errorHandled //TO DO: MANEJO DE ERRORES
   }
 
 }
@@ -265,13 +197,11 @@ function deleteAllEmailsOf(req, res){
   if(req.body.artistId == undefined || !isNumeric(req.body.artistId)){
     let errorHandled = new errors.BadRequestError;
     res.status(errorHandled.status).send(errorHandled);
-    //throw new errors.BadRequestError;
   } else {
     existArtistInUnqfy(req.body.artistId).then((existeArtista) => {
       if(!existeArtista){
         let errorHandled = new errors.RelatedResourceNotFoundError;
         res.status(errorHandled.status).send(errorHandled);
-        //throw new errors.RelatedResourceNotFoundError;
       } else {
         let notificationService = getNotificationService("BaseDeDatos");
         notificationService.deleteAllEmailsOf(req.body.artistId);
@@ -281,28 +211,12 @@ function deleteAllEmailsOf(req, res){
     }).catch((err) => {
       let errorHandled = new errors.RelatedResourceNotFoundError;
       res.status(errorHandled.status).send(errorHandled);
-      //throw errorHandled //TO DO: MANEJO DE ERRORES
     });
   }
-
-
-
-/*
-  if(!existArtistInUnqfy(req.body.artistId)){
-    throw new errors.RelatedResourceNotFoundError;
-  }
-
-  let notificationService = getNotificationService("BaseDeDatos");
-  notificationService.deleteEmailsOf(req.body.artistId);
-
-  res.status(200).send();
-  */
 }
 
 function all(req, res) {
   let notificationService = getNotificationService("BaseDeDatos");
-  //res.status(200).send(notificationService.subjects);
-  //res.status(200).send({respuesta: 'funca'});
   res.status(200).send(notificationService);
 }
 

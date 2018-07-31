@@ -2,7 +2,6 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const errors = require('./errors')
-//const api = require('./routes/urls');
 
 const mainController = require('./controllers/main_controller')
 const api = express.Router();
@@ -28,17 +27,6 @@ api.delete('/subscriptions', mainController.deleteAllEmailsOf);
 //Elimina el feed de un artista
 api.delete('/deleteFeed',mainController.deleteFeed);
 
-function errorHandler(err, req, res, next) {
-    console.error(err);
-    if (err instanceof errors.APIError){
-      res.status(err.status);
-      res.json({status: err.status, errorCode: err.errorCode});
-    } else {
-      res.status(500);
-      res.json({status: 500, errorCode: 'INTERNAL_SERVER_ERROR'});
-    }
-  }
-
 function invalidJsonHandler(err, req, res, next) {
     if (err) {
       throw new errors.BadRequestError();
@@ -52,6 +40,5 @@ app.use('/api', api);
 app.use(function(req, res){
     res.status(404).send({status:404,errorCode:"RESOURCE_NOT_FOUND"});
 });
-//app.use(errorHandler);
 
 module.exports = app;

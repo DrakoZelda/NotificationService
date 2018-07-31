@@ -22,10 +22,6 @@ class NotificationService {
   }
 
   existSubjectOf(_artistId){
-    /*
-    let sub = this.subjects.filter(s => s.artistId == _artistId);
-    return (sub.length !== 0);
-    */
     let sub = this.subjects.find(s => s.artistId == _artistId);
     return (sub !== undefined);
   }
@@ -100,7 +96,6 @@ class NotificationService {
 
   deleteArtistFeed(_artistId) {
     console.log('deleteArtistFeed')
-  //  if(this.existSubjectOf(_artistId)){
       console.log('if true')
       console.log('_artistId = '+_artistId)
       let subjectsUpdated = this.subjects.filter(s => s.artistId != _artistId);
@@ -109,11 +104,6 @@ class NotificationService {
       console.log(subjectsUpdated)
       console.log('this.subjects')
       console.log(this.subjects)
-    /*} else {
-      console.log('if false')
-      throw new Error('No existe el artista con id: '+_artistId);
-    }
-    */
   }
 
   notify(_artistId,_subject,_message,_from){
@@ -125,7 +115,6 @@ class NotificationService {
       try {
         artist.notifyAll(_subject,_message,_from);
       } catch (e) {
-        //throw e;
         console.log('ERROR ORIGINAL')
         console.log(e)
         let errorHandleado = new errors.InternalServerError
@@ -140,25 +129,11 @@ class NotificationService {
 
   static load(filename = 'notificationService.json') {
     const fs = new picklejs.FileSerializer();
-    // TODO: Agregar a la lista todas las clases que necesitan ser instanciadas
+    // Agregar a la lista todas las clases que necesitan ser instanciadas
     const classes = [NotificationService,Subject,Observer];
     fs.registerClasses(...classes);
     return fs.load(filename);
   }
-
-/*
-  save(filename) {
-    new picklejs.FileSerializer().serialize(filename, this);
-  }
-
-  static load(filename = 'notificationService.json') {
-    const fs = new picklejs.FileSerializer();
-    // TODO: Agregar a la lista todas las clases que necesitan ser instanciadas
-    const classes = [NotificationService, Subject, Observer];
-    fs.registerClasses(...classes);
-    return fs.load(filename);
-  }
-  */
 
 
 }
