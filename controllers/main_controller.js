@@ -3,6 +3,7 @@ const notmod = require('../notificationService');
 const errors = require('../errors');
 //const picklejs = require('picklejs');
 const rp = require('request-promise')
+const UNQFY_BASEURL = 'http://' + 'localhost'+ ':' + '8000' + '/api/';
 
 // Retorna una instancia de NotificationService. Si existe filename, recupera la instancia desde el archivo.
 function getNotificationService(filename) {
@@ -22,7 +23,7 @@ function saveNotificationService(notificationService, filename) {
 
 function existArtistInUnqfy(_artistId){
   let options = {
-      url: 'http://localhost:8000/api/existArtist/'+_artistId,
+      url: UNQFY_BASEURL + 'existArtist/'+_artistId,
        json: true,
      };
      console.log(options.url)
@@ -45,40 +46,42 @@ function isNumeric(n) {
 function subscribe(req, res, next){
   console.log('subscribe')
   if(req.body.artistId == undefined || req.body.email == undefined || req.body.email == '' || !isNumeric(req.body.artistId)){
-    throw new errors.BadRequestError;
-  }
-/*
-  let options = {
-      url: 'http://localhost:8000/api/existArtist/'+req.body.artistId,
-       json: true,
-     };
-  console.log('http://localhost:8000/api/existArtist/'+req.body.artistId)
-  rp.get(options)
-  */
-  existArtistInUnqfy(req.body.artistId).then((existeArtista) => {
-      if(!existeArtista){
-        throw new errors.RelatedResourceNotFoundError;
+    let errorHandleado = new errors.BadRequestError
+    res.status(errorHandleado.status).send(errorHandleado)
+    //throw new errors.BadRequestError;
+  } else {
+    existArtistInUnqfy(req.body.artistId).then((existeArtista) => {
+        if(!existeArtista){
+          let errorHandleado = new errors.RelatedResourceNotFoundError
+          res.status(errorHandleado.status).send(errorHandleado)
+          //throw new errors.RelatedResourceNotFoundError;
+        }
+      //if(!existArtistInUnqfy(req.body.artistId)){
+        //throw new errors.RelatedResourceNotFoundError;
+      //}
+
+      let notificationService = getNotificationService("BaseDeDatos");
+      console.log(notificationService);
+
+      if(!notificationService.existSubscriberOf(req.body.artistId, req.body.email)) {
+        console.log('cargando nuevo subscriptor');
+        console.log('artistId: '+req.body.artistId);
+        console.log('email: '+req.body.email);
+        notificationService.addSubscriberTo(req.body.artistId, req.body.email);
+        saveNotificationService(notificationService, "BaseDeDatos");
+        console.log('Guardo notificationService')
+      } else {
+        console.log('No guardo')
       }
-    //if(!existArtistInUnqfy(req.body.artistId)){
-      //throw new errors.RelatedResourceNotFoundError;
-    //}
 
-    let notificationService = getNotificationService("BaseDeDatos");
-    console.log(notificationService);
-
-    if(!notificationService.existSubscriberOf(req.body.artistId, req.body.email)) {
-      console.log('cargando nuevo subscriptor');
-      console.log('artistId: '+req.body.artistId);
-      console.log('email: '+req.body.email);
-      notificationService.addSubscriberTo(req.body.artistId, req.body.email);
-      saveNotificationService(notificationService, "BaseDeDatos");
-      console.log('Guardo notificationService')
-    } else {
-      console.log('No guardo')
-    }
-
-    res.status(200).send();
-  }).catch( (error) => next(error))
+      res.status(200).send();
+    }).catch( (error) => {
+      //NO PUDO HABLAR CONTRA UNQFY
+    console.log('no pudo hablar con unqfy')
+    let errorHandleado = new errors.InternalServerError
+    res.status(errorHandleado.status).send(errorHandleado)
+    });
+  }
 }
 
 function unsubscribe(req, res){
@@ -100,7 +103,7 @@ function unsubscribe(req, res){
     }).catch((err) => res.status(err.status).send(err));//TO DO: AGREGAR CATCH CORRECTO (QUIZAS?)
   } catch (e) {
     res.status(e.status).send(e);
-    throw e;
+    //throw e;
   }
 
 /*
